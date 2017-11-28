@@ -90,14 +90,5 @@ class AdaBoostWithBoostrap(object):
 
 		return final_result
 
-from utils import loadData
-x_train, x_test, y_train, y_test = loadData()
 
-
-### test for data 
-adaboost_estimator = AdaBoostWithBoostrap(base_estimator=tree.DecisionTreeClassifier, x_train=x_train, y_train=y_train, x_test=x_test, y_test=y_test)
-
-adaboost_estimator.train()
-
-adaboost_estimator.test()
 
