@@ -36,7 +36,7 @@ class BasicAdaboost(object):
         if error < 1e-5:
             error = 1e-5  
         self.beta.append((1-error)/error)
-        self.weights = [weights[index] *0.5 / error  if errors[index] else 0.5*weight/(1-error)
+        self.weights = [self.weights[index] *0.5 / error  if errors[index] else 0.5*weight/(1-error)
                     for index,weight in enumerate(self.weights)]
 
         self.weights = [1e-8 if weight < 1e-8 else weight for weight in self.weights]
