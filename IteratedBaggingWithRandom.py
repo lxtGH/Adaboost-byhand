@@ -4,6 +4,8 @@ from sklearn.model_selection import cross_val_predict
 from sklearn import datasets
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import BaggingRegressor
+from sklearn.tree import DecisionTreeRegressor
+
 import numpy as np
 
 class IteratedBagging(object):
@@ -16,7 +18,10 @@ class IteratedBagging(object):
 		# x_test 和 y_test 是输入的测试集
 		self.x_test = x_test
 		self.y_test = y_test
+
+
 		self.estimators = []
+
 
 	def check(self,Loss,loss_2):
 		for i,loss in enumerate(Loss):
@@ -24,43 +29,51 @@ class IteratedBagging(object):
 				return True
 		return False
 
+	# bootstrap sample
+	def resample(self,length):
+		idx = np.random.randint(0, length, size=(length))
+		idx = idx[:int(len(idx) * 0.8)]
+		return idx
 
 	def train(self):
+		length = len(self.x_train)
 		L = []
 		loss = []
 		pre = 0
+		y_true = 0
 		for i in range(int(self.estimator_num)):
 			reg_1 = self.base_estimator()
-			reg_1.fit(self.x_train,self.y_train)
-			#pre += reg_1.predict(self.x_train)
+			sample_index = self.resample(length)
+			reg_1.fit(self.x_train[sample_index],self.y_train[sample_index])
 			L.append(reg_1)
 
 		self.estimators.append(L)
-		pre = self.predict(x_train)
+
+		pre = self.predict(self.x_train)
 		residual = self.y_train - pre
-		loss_1 = np.sum(np.square(self.y_train - pre)) / len(x_train)
+		loss_1 = np.sum(np.square(self.y_train - pre)) / len(self.x_train)
 		loss.append(loss_1)
 		while True:
-			pre = 0
+			#pre = 0
 			y_temp  = residual
 			L = []
 			for i in range(int(self.estimator_num)):
 				reg_1 = self.base_estimator()
-				reg_1.fit(self.x_train,y_temp)
+				sample_index = self.resample(length)
+				reg_1.fit(self.x_train[sample_index],y_temp[sample_index])
 				#pre += reg_1.predict(self.x_train)
 				L.append(reg_1)
 
 			self.estimators.append(L)
 			#pre = pre/self.estimator_num
-			pre = self.predict(x_train)
+			pre = self.predict(self.x_train)
 			residual = y_temp - pre
-			loss_2 = np.sum(np.square(y_temp - pre)) / len(x_train)
+			loss_2 = np.sum(np.square(y_temp - pre)) / len(self.x_train)
 			
 			if self.check(loss,loss_2):
 				break;
 			loss.append(loss_2)
 			#loss_1 = loss_2
-
 
 	def predict(self,x_test):
 		sum_row = np.zeros((x_test.shape[0],))
@@ -78,25 +91,5 @@ class IteratedBagging(object):
 	def test (self):
 		pass
 
-boston = datasets.load_boston()
-X = boston.data
-y = boston.target
-
-x_train, x_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
 
 
-bagging = IteratedBagging(KNeighborsRegressor,50,x_train,y_train,x_test,y_test)
-
-
-bagging.train()
-
-print(len(bagging.estimators))
-
-y_pred = bagging.predict(x_test)
-
-print(y_pred)
-
-print(y_test)
-
-loss = (np.sum(np.square(y_pred - y_test))/len(y_test))
-print("loss: ",loss)

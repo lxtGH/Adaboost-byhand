@@ -23,7 +23,10 @@ class IteratedBagging(object):
 			if loss * 1.1 < loss_2 :
 				return True
 		return False
-
+	def resample(self,length):
+		idx = np.random.randint(0, length, size=(length))
+		idx = idx[:int(len(idx) * 0.8)]
+		return idx
 
 	def train(self):
 		L = []
@@ -31,7 +34,8 @@ class IteratedBagging(object):
 		pre = 0
 		for i in range(int(self.estimator_num)):
 			reg_1 = self.base_estimator()
-			reg_1.fit(self.x_train,self.y_train)
+			sample = resample(len(self.x_train))
+			reg_1.fit(self.x_train[sample],self.y_train[sample])
 			#pre += reg_1.predict(self.x_train)
 			L.append(reg_1)
 
@@ -46,7 +50,8 @@ class IteratedBagging(object):
 			L = []
 			for i in range(int(self.estimator_num)):
 				reg_1 = self.base_estimator()
-				reg_1.fit(self.x_train,y_temp)
+				sample = resample(len(self.x_train))
+			reg_1.fit(self.x_train[sample],self.y_[sample])
 				#pre += reg_1.predict(self.x_train)
 				L.append(reg_1)
 
