@@ -5,7 +5,6 @@ from sklearn import datasets
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import BaggingRegressor
 from sklearn.tree import DecisionTreeRegressor
-
 import numpy as np
 
 class IteratedBagging(object):
@@ -85,9 +84,6 @@ class IteratedBagging(object):
 				sum_row += s1
 			sum_total += sum_row/self.estimator_num
 		return sum_total
-
-
-
 	def test (self):
 		pass
 

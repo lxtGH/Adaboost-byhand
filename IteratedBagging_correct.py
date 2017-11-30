@@ -18,9 +18,7 @@ class IteratedBagging(object):
 		# x_test 和 y_test 是输入的测试集
 		self.x_test = x_test
 		self.y_test = y_test
-
 		self.estimators = []
-
 
 	def check(self,Loss,loss_2):
 		for i,loss in enumerate(Loss):
@@ -43,6 +41,7 @@ class IteratedBagging(object):
 				L.append(np.random.randint(0,length))
 			Mask.append(L)
 		return np.array(Mask)
+
 	# get the Remain
 	def getRemain(self,Mask,estimator_num,length):
 		Remain = []
@@ -54,48 +53,43 @@ class IteratedBagging(object):
 		return Remain
 
 
-
-
 	def train(self):
 		length = len(self.x_train)
 		Mask = self.getMask(length,self.estimator_num)
-		getRemain = self.getRemain(Mask,self.estimator_num,length)
-
+		Remain = self.getRemain(Mask,self.estimator_num,length)
 		L = []
 		loss = []
-		Res = []
+		res = []
+		for i in range(self.estimator_num):
+			res.append([])
 		pre = 0
 		y_true = 0
 		for i in range(int(self.estimator_num)):
 			reg_1 = self.base_estimator()
 			reg_1.fit(self.x_train[Mask[i,:]],self.y_train[Mask[i,:]])
+			res[i] = reg_1.predict(self.x_train[Remain[i]]) - self.y_train[Remain[i]]
 			L.append(reg_1)
-
 		self.estimators.append(L)
-
 		pre = self.predict(self.x_train)
-		residual = self.y_train - pre
 		loss_1 = np.sum(np.square(self.y_train - pre)) / len(self.x_train)
 		loss.append(loss_1)
 		while True:
-			#pre = 0
-			y_temp  = residual
+			y_temp  = res
 			L = []
 			for i in range(int(self.estimator_num)):
 				reg_1 = self.base_estimator()
-				reg_1.fit(self.x_train[Mask[i,:]],y_temp[Mask[i,:]])
+				reg_1.fit(self.x_train[Remain[i]],y_temp[i])
+				res[i] = reg_1.predict(self.x_train[Remain[i]]) - self.y_train[Remain[i]]
 				L.append(reg_1)
 
 			self.estimators.append(L)
 			#pre = pre/self.estimator_num
 			pre = self.predict(self.x_train)
-			residual = y_temp - pre
-			loss_2 = np.sum(np.square(y_temp - pre)) / len(self.x_train)
+			loss_2 = np.sum(np.square(self.y_train - pre)) / len(self.x_train)
 			
 			if self.check(loss,loss_2):
 				break;
 			loss.append(loss_2)
-			#loss_1 = loss_2
 
 	def predict(self,x_test):
 		sum_row = np.zeros((x_test.shape[0],))
@@ -107,8 +101,6 @@ class IteratedBagging(object):
 				sum_row += s1
 			sum_total += sum_row/self.estimator_num
 		return sum_total
-
-
 
 	def test (self):
 		pass
